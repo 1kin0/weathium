@@ -9,6 +9,9 @@ from discord import app_commands
 from playwright.async_api import async_playwright
 from dotenv import load_dotenv
 
+_browser = None
+_playwright = None
+
 load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -19,15 +22,50 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="/", intents=intents)
 
 
+async def get_browser():
+    global _browser, _playwright
+    if _browser is None:
+        _playwright = await async_playwright().start()
+        _browser = await _playwright.chromium.launch(
+            headless=True,
+            args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage", # КРИТИЧНО для Railway
+                "--disable-gpu",           # Экономит RAM
+                "--no-zygote",
+                "--single-process"         # Максимальная экономия памяти
+            ]
+        )
+    return _browser
+
 async def render_html():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
-        await page.set_viewport_size({"width": 1200, "height": 800})
-        await page.goto(f'file://{os.path.abspath("index.html")}')
-        buffer = await page.screenshot(full_page=False, type="png")
-        await browser.close()
+    browser = await get_browser()
+    # Используем контекст, чтобы куки/кеш не забивали память со временем
+    context = await browser.new_context(
+        viewport={"width": 1200, "height": 800} # Указываем размер сразу
+    )
+    page = await context.new_page()
+    
+    try:
+        # Быстрая загрузка локального файла
+        await page.goto(f'file://{os.path.abspath("index.html")}', wait_until="domcontentloaded")
+        
+        # Скриншот только нужной области (если есть конкретный id/class)
+        # Например: buffer = await page.locator(".card").screenshot()
+        buffer = await page.screenshot(type="png")
+        
         return buffer
+    finally:
+        # Закрываем только вкладку и контекст, но ОСТАВЛЯЕМ браузер запущенным
+        await page.close()
+        await context.close()
+
+async def close_browser():
+    if _browser:
+        await _browser.close()
+    if _playwright:
+        await _playwright.stop()
 
 
 @bot.event
