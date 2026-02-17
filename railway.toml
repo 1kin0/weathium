@@ -1,6 +1,6 @@
 [build]
 builder = "railpack"
-buildCommand = "python -m playwright install-deps chromium && python -m playwright install chromium"
+buildCommand = "python -m playwright install-deps chromium"
 
 [deploy]
-python "bot.py"
+startCommand = "python -m playwright install chromium && python bot.py"
