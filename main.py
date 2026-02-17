@@ -99,7 +99,7 @@ async def slash_render(interaction: discord.Interaction):
     try:
         # Браузер уже запущен, получаем ссылку на него мгновенно
         browser = await get_browser()
-        context = await browser.new_context(viewport={"width": 1200, "height": 1000})
+        context = await browser.new_context(viewport={"width": 1300, "height": 1000})
         page = await context.new_page()
         
         try:
