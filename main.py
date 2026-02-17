@@ -29,19 +29,19 @@ async def send_unified_log(log_type: str, color: discord.Color, content: str, in
 
     # Header section
     timestamp = int(time.time())
-    header = f"**TYPE: {log_type.upper()}**\n"
-    header += f"**TIME: <t:{timestamp}:F>**\n"
+    header = f"**TYPE : {log_type.upper()}**\n"
+    header += f"**TIME : <t:{timestamp}:F>**\n"
 
     # Location section
     if interaction:
-        location = f"**LOCATION:** `{interaction.guild.name if interaction.guild else 'DM'}` (`{interaction.guild_id}`)\n"
-        location += f"**USER:** `{interaction.user}` (`{interaction.user.id}`)"
+        location = f"**LOCATION :** `{interaction.guild.name if interaction.guild else 'DM'}` (`{interaction.guild_id}`)\n"
+        location += f"**USER :** `{interaction.user}` (`{interaction.user.id}`)"
     else:
-        location = "**LOCATION:** `Internal System`"
+        location = "**LOCATION :** `Internal System`"
 
     embed = discord.Embed(
         title=header,
-        description=f"{location}\n\n**CONTENT:**\n ```{content[:1000]}``` ",
+        description=f"{location}\n\n ```{content[:1000]}``` ",
         color=color
     )
     await channel.send(embed=embed)
@@ -74,12 +74,12 @@ async def on_ready():
 async def slash_ping(interaction: discord.Interaction):
     await interaction.response.send_message(f"`{round(bot.latency * 1000)}ms`", ephemeral=True)
 
-@bot.tree.command(name="render", description="Render index.html")
+@bot.tree.command(name="render", description="Render widget.html")
 async def slash_render(interaction: discord.Interaction):
     await interaction.response.defer()
     
     # Check file existence first
-    path = os.path.abspath("index.html")
+    path = os.path.abspath("widget.html")
     if not os.path.exists(path):
         err_text = f"File not found: `{path}`"
         await send_unified_log("render_error", discord.Color.red(), err_text, interaction)
