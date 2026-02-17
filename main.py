@@ -41,7 +41,7 @@ async def send_unified_log(log_type: str, color: discord.Color, content: str, in
 
     embed = discord.Embed(
         title=header,
-        description=f"{location}\n\n**CONTENT:**\n```{content[:1500]}```",
+        description=f"{location}\n\n**CONTENT:**\n ```{content[:1000]}``` ",
         color=color
     )
     await channel.send(embed=embed)
@@ -68,7 +68,7 @@ async def get_browser():
 @bot.event
 async def on_ready():
     await bot.tree.sync()
-    await send_unified_log("startup", discord.Color.green(), f"Bot is online. Latency: `{round(bot.latency * 1000)}ms`")
+    await send_unified_log("startup", discord.Color.green(), f"Bot is online. Latency: {round(bot.latency * 1000)}ms")
 
 @bot.tree.command(name="ping", description="Check latency")
 async def slash_ping(interaction: discord.Interaction):
@@ -88,7 +88,7 @@ async def slash_render(interaction: discord.Interaction):
 
     try:
         browser = await get_browser()
-        context = await browser.new_context(viewport={"width": 1200, "height": 800})
+        context = await browser.new_context(viewport={"width": 1200, "height": 1000})
         page = await context.new_page()
         
         try:
