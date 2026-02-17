@@ -3,6 +3,7 @@ import io
 import time
 import discord
 import traceback
+import asyncio
 from discord.ext import commands
 from playwright.async_api import async_playwright
 from dotenv import load_dotenv
@@ -20,22 +21,25 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="/", intents=intents)
 
-async def send_status_log(title: str, description: str, color: discord.Color, fields: dict = None):
+async def send_status_log(title: str, description: str, color: discord.Color, fields: dict = None, is_error: bool = False):
     guild = bot.get_guild(LOG_GUILD_ID)
     if not guild: return
     channel = guild.get_channel(LOG_CHANNEL_ID)
     if not channel: return
 
+    # Крупное время и заголовок для моментального опознания
+    current_time = int(time.time())
+    main_header = f"# 🕒 TIME: <t:{current_time}:T>\n# ❌ ERROR: {title}" if is_error else f"# ✅ {title}"
+
     embed = discord.Embed(
-        title=f"**{title.upper()}**",
-        description=description[:2000],
-        color=color,
-        timestamp=discord.utils.utcnow()
+        title=main_header,
+        description=f"**DETAILS:**\n{description[:1800]}",
+        color=color
     )
     
     if fields:
         for name, value in fields.items():
-            embed.add_field(name=name, value=value, inline=True)
+            embed.add_field(name=f"**{name.upper()}**", value=value, inline=True)
     
     await channel.send(embed=embed)
 
@@ -52,66 +56,58 @@ async def get_browser():
                 headless=True,
                 args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
             )
-            await send_status_log("Browser System", "Chromium instance initialized", discord.Color.blue())
+            await send_status_log("Browser Engine", "Started successfully", discord.Color.blue())
         except Exception as e:
-            await send_status_log("Critical Launch Error", f"```py\n{str(e)}```", discord.Color.red())
+            await send_status_log("Launch Failed", f"```\n{str(e)}```", discord.Color.red(), is_error=True)
             raise e
     return _browser
-
-async def render_html():
-    browser = await get_browser()
-    context = await browser.new_context(viewport={"width": 1200, "height": 800})
-    page = await context.new_page()
-    try:
-        path = os.path.abspath("index.html")
-        await page.goto(f'file://{path}', wait_until="domcontentloaded", timeout=20000)
-        return await page.screenshot(type="png")
-    finally:
-        await page.close()
-        await context.close()
 
 @bot.event
 async def on_ready():
     await bot.tree.sync()
-    await send_status_log(
-        "Bot Startup", 
-        "System is now online and commands are synced.", 
-        discord.Color.green(),
-        {"Latency": f"`{round(bot.latency * 1000)}ms`", "Status": "`Active`"}
-    )
+    await send_status_log("Bot Online", "Ready to work", discord.Color.green())
 
-@bot.tree.command(name="ping", description="Check latency")
+@bot.tree.command(name="ping", description="Latency check")
 async def slash_ping(interaction: discord.Interaction):
-    await interaction.response.send_message(f'Pong! `{round(bot.latency * 1000)}ms`')
+    await interaction.response.send_message(f"`{round(bot.latency * 1000)}ms`", ephemeral=True)
 
 @bot.tree.command(name="render", description="Render page")
 async def slash_render(interaction: discord.Interaction):
     await interaction.response.defer()
-    start_time = time.perf_counter()
     
     try:
-        buffer = await render_html()
-        total_ms = (time.perf_counter() - start_time) * 1000
-        file = discord.File(io.BytesIO(buffer), "render.png")
-        await interaction.followup.send(file=file)
-    
-    except Exception as e:
-        error_type = type(e).__name__
-        error_details = str(e)[:1000]
+        browser = await get_browser()
+        context = await browser.new_context(viewport={"width": 1200, "height": 800})
+        page = await context.new_page()
         
-        # Информативный лог для канала
+        try:
+            path = os.path.abspath("index.html")
+            await page.goto(f'file://{path}', wait_until="domcontentloaded", timeout=15000)
+            await asyncio.sleep(0.5)
+            buffer = await page.screenshot(type="png")
+            
+            file = discord.File(io.BytesIO(buffer), "render.png")
+            await interaction.followup.send(file=file)
+            
+        finally:
+            await page.close()
+            await context.close()
+            
+    except Exception as e:
+        tb = traceback.format_exc()
+        # ЛОГ ДЛЯ ТЕБЯ (ПОДРОБНО И КРУПНО)
         await send_status_log(
-            "Render Command Failed",
-            f"**Error Type:** `{error_type}`\n**Summary:** {error_details}",
-            discord.Color.red(),
-            {
+            title=f"Render {type(e).__name__}",
+            description=f"```py\n{tb[:1500]}```",
+            color=discord.Color.red(),
+            fields={
                 "User": f"`{interaction.user}`",
                 "Guild": f"`{interaction.guild.name if interaction.guild else 'DM'}`",
-                "User ID": f"`{interaction.user.id}`"
-            }
+                "ID": f"`{interaction.user.id}`"
+            },
+            is_error=True
         )
-        
-        # Ответ пользователю
-        await interaction.followup.send(content=f"Execution error: `{error_type}`. Details sent to logs.")
+        # ОТВЕТ ПОЛЬЗОВАТЕЛЮ (КРАТКО)
+        await interaction.followup.send(content="`Browser error`. Try again later.")
 
 bot.run(TOKEN)
