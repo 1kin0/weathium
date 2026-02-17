@@ -42,8 +42,11 @@ async def on_ready():
 
 @bot.tree.command(name="ping", description="Check bot latency")
 async def slash_ping(interaction: discord.Interaction):
-    latency_ms = round(bot.latency * 1000)
-    await interaction.response.send_message(f'Pong! `{latency_ms}ms`')
+    start = time.perf_counter()
+    await interaction.response.send_message('Pong!')
+    end = time.perf_counter()
+    duration = round((end - start) * 1000)
+    await interaction.edit_original_response(content=f'Pong! `{duration}ms`')
 
 
 @bot.tree.command(name="render", description="Render page and send screenshot")
