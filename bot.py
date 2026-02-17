@@ -12,11 +12,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
-print("DEBUG: TOKEN =", repr(TOKEN))  # покажет None или строку
-print("DEBUG: DISCORD_TOKEN in os.environ?", "DISCORD_TOKEN" in os.environ)
 
 if not TOKEN:
-    print("CRITICAL ERROR: DISCORD_TOKEN not found!")
+    print("⚠️ CRITICAL ERROR: DISCORD_TOKEN not found!")
     exit(1)
 
 print("✅ Token OK, starting bot...")
