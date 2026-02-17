@@ -13,18 +13,10 @@ load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
-if not TOKEN:
-    print("⚠️ CRITICAL ERROR: DISCORD_TOKEN not found!")
-    exit(1)
-
-print("✅ Token OK, starting bot...")
-
 intents = discord.Intents.default()
-# message_content не обязателен, если используем только slash,
-# но можно оставить на будущее
 intents.message_content = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="/", intents=intents)
 
 
 async def render_html():
@@ -48,23 +40,16 @@ async def on_ready():
         print(f"Failed to sync commands: {e}")
 
 
-# /ping
-@bot.tree.command(name="ping", description="Проверить задержку бота")
+@bot.tree.command(name="ping", description="Check bot latency")
 async def slash_ping(interaction: discord.Interaction):
     latency_ms = round(bot.latency * 1000)
-    embed = discord.Embed(
-        title="Pong",
-        description=f"`{latency_ms} ms`",
-        color=discord.Color.green(),
-    )
-    await interaction.response.send_message(embed=embed)
+    await interaction.response.send_message(f'Pong! {latency_ms}ms')
 
 
-# /render
-@bot.tree.command(name="render", description="Отрендерить страницу и отправить скриншот")
+@bot.tree.command(name="render", description="Render page and send screenshot")
 async def slash_render(interaction: discord.Interaction):
     start_total = time.perf_counter()
-    await interaction.response.defer()  # thinking...
+    await interaction.response.defer()
 
     start_render = time.perf_counter()
     buffer = await render_html()
@@ -77,16 +62,16 @@ async def slash_render(interaction: discord.Interaction):
 
     embed = discord.Embed(
         title="Render result",
-        color=discord.Color.blurple(),
+        color=discord.Color.blue(),
     )
     embed.add_field(
         name="Render time",
-        value=f"`{render_ms:.1f} ms`",
+        value=f"{render_ms:.1f} ms",
         inline=True,
     )
     embed.add_field(
         name="Total time",
-        value=f"`{total_ms:.1f} ms`",
+        value=f"{total_ms:.1f} ms",
         inline=True,
     )
     embed.set_footer(
