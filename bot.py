@@ -1,7 +1,6 @@
 import os
 import io
 import time
-import logging
 import discord
 from discord.ext import commands
 from playwright.async_api import async_playwright
@@ -9,7 +8,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configuration
 TOKEN = os.getenv("DISCORD_TOKEN")
 LOG_GUILD_ID = 1473082652452978991
 LOG_CHANNEL_ID = 1473409327514648597
@@ -22,13 +20,20 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="/", intents=intents)
 
-async def send_log(message: str):
+async def send_log_embed(title: str, description: str, color: discord.Color):
     guild = bot.get_guild(LOG_GUILD_ID)
     if guild:
         channel = guild.get_channel(LOG_CHANNEL_ID)
         if channel:
-            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-            await channel.send(f"[`{timestamp}`] {message}")
+            # Prevent 400 Bad Request by truncating long error messages
+            safe_desc = (description[:3500] + '...') if len(description) > 3500 else description
+            embed = discord.Embed(
+                title=title,
+                description=safe_desc,
+                color=color,
+                timestamp=discord.utils.utcnow()
+            )
+            await channel.send(embed=embed)
 
 async def get_browser():
     global _browser, _playwright
@@ -37,18 +42,11 @@ async def get_browser():
             _playwright = await async_playwright().start()
             _browser = await _playwright.chromium.launch(
                 headless=True,
-                args=[
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-gpu",
-                    "--no-zygote",
-                    "--single-process"
-                ]
+                args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--no-zygote", "--single-process"]
             )
-            await send_log("Browser instance started successfully")
+            await send_log_embed("Browser Status", "Instance started successfully", discord.Color.green())
         except Exception as e:
-            await send_log(f"Critical error starting browser: `{str(e)}` ")
+            await send_log_embed("Browser Critical Error", f"Failed to launch: `{str(e)}`", discord.Color.red())
             raise e
     return _browser
 
@@ -56,13 +54,11 @@ async def render_html():
     browser = await get_browser()
     context = await browser.new_context(viewport={"width": 1200, "height": 800})
     page = await context.new_page()
-    
     try:
-        await page.goto(f'file://{os.path.abspath("index.html")}', wait_until="domcontentloaded", timeout=30000)
-        buffer = await page.screenshot(type="png")
-        return buffer
+        await page.goto(f'file://{os.path.abspath("index.html")}', wait_until="domcontentloaded", timeout=20000)
+        return await page.screenshot(type="png")
     except Exception as e:
-        await send_log(f"Render process failed: `{str(e)}` ")
+        await send_log_embed("Render Error", f"Execution failed: `{str(e)}`", discord.Color.red())
         raise e
     finally:
         await page.close()
@@ -70,38 +66,24 @@ async def render_html():
 
 @bot.event
 async def on_ready():
-    print(f"{bot.user} connected")
     await bot.tree.sync()
-    await send_log(f"Bot status: `Online`. Latency: `{round(bot.latency * 1000)}ms`")
+    await send_log_embed("Bot Online", f"Sync complete. Latency: `{round(bot.latency * 1000)}ms`", discord.Color.blue())
 
-@bot.tree.command(name="ping", description="Check bot latency")
-async def slash_ping(interaction: discord.Interaction):
-    start = time.perf_counter()
-    await interaction.response.send_message('Pong!')
-    duration = round((time.perf_counter() - start) * 1000)
-    await interaction.edit_original_response(content=f'Pong! `{duration}ms`')
-
-@bot.tree.command(name="render", description="Render page and send screenshot")
+@bot.tree.command(name="render", description="Render page")
 async def slash_render(interaction: discord.Interaction):
     start_total = time.perf_counter()
     await interaction.response.defer()
-
     try:
-        start_render = time.perf_counter()
         buffer = await render_html()
-        render_ms = (time.perf_counter() - start_render) * 1000
         total_ms = (time.perf_counter() - start_total) * 1000
-
         file = discord.File(io.BytesIO(buffer), "render.png")
-        embed = discord.Embed(title="Render Result", color=0x3498db)
-        embed.add_field(name="Render Time", value=f"`{render_ms:.1f} ms`", inline=True)
-        embed.add_field(name="Total Time", value=f"`{total_ms:.1f} ms`", inline=True)
-        embed.set_footer(text=f"Requested by {interaction.user}", icon_url=interaction.user.display_avatar.url)
-
+        embed = discord.Embed(title="Render Result", color=discord.Color.blue())
+        embed.set_footer(text=f"Time: {total_ms:.1f}ms | User: {interaction.user}")
         await interaction.followup.send(file=file, embed=embed)
     except Exception as e:
-        error_msg = f"Failed to render: `{str(e)}`"
-        await interaction.followup.send(content=error_msg)
-        await send_log(f"User {interaction.user} triggered error: `{str(e)}`")
+        raw_err = str(e)
+        short_err = (raw_err[:1500] + '...') if len(raw_err) > 1500 else raw_err
+        await interaction.followup.send(content=f"Error: `{short_err}`")
+        await send_log_embed("User Command Error", f"User: `{interaction.user}`\nError: `{short_err}`", discord.Color.red())
 
 bot.run(TOKEN)
