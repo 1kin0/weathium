@@ -25,7 +25,6 @@ async def send_log_embed(title: str, description: str, color: discord.Color):
     if guild:
         channel = guild.get_channel(LOG_CHANNEL_ID)
         if channel:
-            # Prevent 400 Bad Request by truncating long error messages
             safe_desc = (description[:3500] + '...') if len(description) > 3500 else description
             embed = discord.Embed(
                 title=title,
@@ -44,7 +43,7 @@ async def get_browser():
                 headless=True,
                 args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--no-zygote", "--single-process"]
             )
-            await send_log_embed("Browser Status", "Instance started successfully", discord.Color.green())
+            await send_log_embed("Browser Status", "Instance started", discord.Color.green())
         except Exception as e:
             await send_log_embed("Browser Critical Error", f"Failed to launch: `{str(e)}`", discord.Color.red())
             raise e
@@ -68,6 +67,13 @@ async def render_html():
 async def on_ready():
     await bot.tree.sync()
     await send_log_embed("Bot Online", f"Sync complete. Latency: `{round(bot.latency * 1000)}ms`", discord.Color.blue())
+
+@bot.tree.command(name="ping", description="Check bot latency")
+async def slash_ping(interaction: discord.Interaction):
+    start = time.perf_counter()
+    await interaction.response.send_message('Pong!')
+    duration = round((time.perf_counter() - start) * 1000)
+    await interaction.edit_original_response(content=f'Pong! `{duration}ms`')
 
 @bot.tree.command(name="render", description="Render page")
 async def slash_render(interaction: discord.Interaction):
