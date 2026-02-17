@@ -3,4 +3,4 @@ builder = "railpack"
 buildCommand = "playwright install --with-deps chromium"
 
 [deploy]
-startCommand = "python main.py" # Замени на свой файл
+startCommand = "python bot.py"
