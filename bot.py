@@ -2,11 +2,11 @@ import os
 import io
 import time
 
-os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "/app/pw-browsers"
-
 import discord
 from discord.ext import commands
 from discord import app_commands
+
+os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "/app/pw-browsers"
 
 from playwright.async_api import async_playwright
 from dotenv import load_dotenv
