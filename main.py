@@ -29,9 +29,8 @@ async def send_unified_log(log_type: str, color: discord.Color, content: str, in
 
     # Header section
     timestamp = int(time.time())
-    header = f"# **TYPE: {log_type.upper()}**\n"
-    header += f"# **TIME: <t:{timestamp}:F>**\n"
-    header += "---"
+    header = f"**TYPE: {log_type.upper()}**\n"
+    header += f"**TIME: <t:{timestamp}:F>**\n"
 
     # Location section
     if interaction:
@@ -42,7 +41,7 @@ async def send_unified_log(log_type: str, color: discord.Color, content: str, in
 
     embed = discord.Embed(
         title=header,
-        description=f"{location}\n\n**CONTENT:**\n{content[:1500]}",
+        description=f"{location}\n\n**CONTENT:**\n```{content[:1500]}```",
         color=color
     )
     await channel.send(embed=embed)

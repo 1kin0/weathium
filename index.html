@@ -2,16 +2,14 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Weather Widget Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <title>Weather Widget iOS Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* Обнуление */
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             width: 1200px;
-            height: 800px;
-            /* Создаем глубину: радиальный градиент от темно-серого в углу к черному */
+            height: 1000px; /* Увеличил высоту */
             background: transparent !important;
             font-family: 'Inter', sans-serif;
             color: #ffffff;
@@ -21,271 +19,244 @@
             overflow: hidden;
         }
 
-        /* Основная карточка */
+        /* Основная карточка в стиле iOS */
         .weather-card {
-            width: 1100px;
-            height: 700px;
-            background-color: #1e1f22; /* Discord Chat Background */
-            /* Едва заметная светлая граница для выделения на темном фоне */
-            border: 2px solid rgba(255, 255, 255, 0.03);
-            border-radius: 56px; /* Более мягкие скругления */
-            padding: 72px;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-            /* Мягкая тень для объема */
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
-        }
-
-        /* ЛЕВАЯ КОЛОНКА */
-        .main-info {
+            width: 900px;
+            height: 900px;
+            background: linear-gradient(180deg, #4A90E2 0%, #2D5F9E 100%);
+            border-radius: 60px;
+            position: relative;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            flex: 1.2; /* Даем левой части чуть больше места */
+            padding: 60px;
+            /* Убрал тень, добавил тонкий бордер */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: none;
         }
 
-        .location {
+        /* Эффекты заднего фона */
+        .bg-glow {
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,230,100,0.4) 0%, rgba(255,255,255,0) 70%);
+            filter: blur(50px);
+            z-index: 1;
+        }
+
+        .bg-cloud {
+            position: absolute;
+            bottom: 10%;
+            left: -50px;
+            width: 400px;
+            height: 250px;
+            background: rgba(255, 255, 255, 0.15);
+            filter: blur(80px);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
             display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 32px;
+            flex-direction: column;
+            height: 100%;
         }
 
-        .location-icon {
-            width: 42px;
-            height: 42px;
-            fill: #5865F2; /* Discord Blurple Accent */
-            opacity: 0.9;
+        /* Верхний блок (Крупный текст) */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
         }
 
         .city-name {
-            font-size: 48px;
-            font-weight: 700;
-            color: #f2f3f5;
-            letter-spacing: 0.5px;
+            font-size: 54px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
         }
 
-        .temperature-block {
-            display: flex;
-            align-items: flex-start;
-            /* Текстовый градиент для придания объема цифрам */
-            background: linear-gradient(135deg, #ffffff 30%, #b5bac1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .temp-value {
-            font-size: 220px; /* Еще крупнее */
-            font-weight: 900; /* Максимальная жирность */
+        .main-temp {
+            font-size: 160px;
+            font-weight: 200;
             line-height: 1;
-            letter-spacing: -6px;
+            margin-left: 25px; /* компенсируем знак градуса */
         }
 
-        .temp-unit {
-            font-size: 64px;
-            font-weight: 600;
-            color: #b5bac1; /* Вернем цвет юниту, чтобы не сливался с градиентом */
-            -webkit-text-fill-color: #b5bac1;
-            margin-top: 32px;
-            margin-left: 8px;
-        }
-
-        .condition-badge {
-            display: inline-flex;
-            align-items: center;
-            /* Используем акцентный цвет с низкой прозрачностью для фона */
-            background-color: rgba(88, 101, 242, 0.15);
-            padding: 18px 36px;
-            border-radius: 32px;
-            width: fit-content;
-            margin-top: 24px;
-            border: 1px solid rgba(88, 101, 242, 0.3);
-        }
-
-        .condition-text {
+        .main-condition {
             font-size: 28px;
-            font-weight: 600;
-            color: #dee0fc; /* Светлый оттенок акцентного цвета */
-            text-transform: capitalize;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 10px;
         }
 
-        /* ПРАВАЯ КОЛОНКА */
-        .visuals {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            justify-content: space-between;
-            height: 100%;
-            padding-left: 40px;
+        .high-low {
+            font-size: 24px;
+            font-weight: 500;
+            margin-top: 8px;
         }
 
-        .weather-icon-large {
-            width: 320px;
-            height: 320px;
-            /* Мягкое свечение вокруг иконки */
-            filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.2));
-        }
-
+        /* Сетка подробностей (Glassmorphism) */
         .details-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
-            width: 100%;
             margin-top: auto;
         }
 
-        .detail-item {
-            /* Цвет "Embed" из Discord - немного светлее фона */
-            background-color: #2b2d31;
-            border-radius: 28px;
-            padding: 28px;
-            display: flex;
-            align-items: flex-start;
-            gap: 18px;
-            transition: transform 0.2s;
-            border: 1px solid transparent;
-        }
-        
-        /* Опционально: если бы это был не скриншот, можно было бы добавить ховер */
-        /* .detail-item:hover { border-color: rgba(255,255,255,0.1); transform: translateY(-2px);} */
-
-        .detail-icon-wrap {
-            background-color: #1e1f22;
-            padding: 12px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .detail-icon {
-            width: 32px;
-            height: 32px;
-            fill: #949ba4; /* Более приглушенный цвет иконок */
-        }
-
-        .detail-info {
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
         }
 
-        .detail-label {
+        .panel-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 16px;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #949ba4;
-            font-weight: 700;
-            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 15px;
         }
 
-        .detail-value {
-            font-size: 30px;
-            color: #ffffff;
-            font-weight: 800;
+        .panel-label svg {
+            width: 18px;
+            height: 18px;
+            opacity: 0.7;
         }
+
+        .panel-value {
+            font-size: 38px;
+            font-weight: 600;
+        }
+
+        .panel-desc {
+            font-size: 16px;
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.3;
+        }
+
+        /* Специфический стиль для часового прогноза (мини-панель) */
+        .hourly-forecast {
+            grid-column: span 2;
+            padding: 25px;
+        }
+
+        .hourly-list {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .hourly-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hour-time { font-size: 18px; font-weight: 600; }
+        .hour-temp { font-size: 20px; font-weight: 600; }
+        .hour-icon { width: 32px; height: 32px; }
+
     </style>
 </head>
 <body>
 
     <div class="weather-card">
-        <div class="main-info">
-            <div class="location">
-                <svg class="location-icon" viewBox="0 0 24 24">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
-                <div class="city-name">Москва</div>
-            </div>
+        <div class="bg-glow"></div>
+        <div class="bg-cloud"></div>
 
-            <div class="temperature-block">
-                <div class="temp-value">-12</div>
-                <div class="temp-unit">°</div>
+        <div class="content">
+            <div class="header">
+                <h1 class="city-name">Москва</h1>
+                <div class="main-temp">-12°</div>
+                <p class="main-condition">Облачно с прояснениями</p>
+                <p class="high-low">М: -10° Н: -18°</p>
             </div>
-
-            <div class="condition-badge">
-                <span class="condition-text">Облачно с прояснениями</span>
-            </div>
-        </div>
-
-        <div class="visuals">
-            <svg class="weather-icon-large" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <radialGradient id="sunGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" style="stop-color:#FFF7AD;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#FFBD59;stop-opacity:1" />
-                    </radialGradient>
-                    <linearGradient id="cloudGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#DCE5ED;stop-opacity:1" />
-                    </linearGradient>
-                </defs>
-                
-                <circle cx="65" cy="35" r="22" fill="url(#sunGradient)" stroke="#FFBC58" stroke-width="1.5"/>
-                
-                <g transform="translate(0, 10)">
-                    <circle cx="30" cy="55" r="15" fill="url(#cloudGradient)" />
-                    <circle cx="50" cy="45" r="18" fill="url(#cloudGradient)" />
-                    <circle cx="70" cy="55" r="15" fill="url(#cloudGradient)" />
-                    <rect x="30" y="55" width="40" height="15" fill="url(#cloudGradient)" />
-                     <path d="M30,70 C21.7157288,70 15,63.2842712 15,55 C15,48.1583856 19.5935739,42.3392909 25.8703263,40.5800874 C28.3185884,32.7588114 35.7099965,27 44.5,27 C53.2900035,27 60.6814116,32.7588114 63.1296737,40.5800874 C69.4064261,42.3392909 74,48.1583856 74,55 C74,63.2842712 67.2842712,70 59,70 L30,70 Z" 
-                          fill="none" stroke="#C4D3DF" stroke-width="2" transform="translate(5, -5)"/>
-                </g>
-            </svg>
 
             <div class="details-grid">
-                <div class="detail-item">
-                    <div class="detail-icon-wrap">
-                        <svg class="detail-icon" viewBox="0 0 24 24">
-                            <path d="M12.78 4.72a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L3.22 5.78a.75.75 0 0 1 1.06-1.06L7.5 7.94l3.72-3.72a.75.75 0 0 1 1.06 0Z" opacity=".5"/>
-                            <path d="M12.78 19.28a.75.75 0 0 1 0-1.06l-4.25-4.25a.75.75 0 0 1-1.06 0L3.22 18.22a.75.75 0 1 1 1.06 1.06L7.5 16.06l3.72 3.72a.75.75 0 0 1 1.06 0Z"/>
-                            <path d="M8 11.5a.75.75 0 0 0 0 1.5h13.5a.75.75 0 0 0 0-1.5H8Z" />
-                        </svg>
-                    </div>
-                    <div class="detail-info">
-                        <span class="detail-label">Ветер</span>
-                        <span class="detail-value">6.2 м/с</span>
-                    </div>
-                </div>
                 
-                <div class="detail-item">
-                    <div class="detail-icon-wrap">
-                         <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>
-                        </svg>
-                    </div>
-                    <div class="detail-info">
-                        <span class="detail-label">Влажность</span>
-                        <span class="detail-value">84%</span>
+                <div class="glass-panel hourly-forecast">
+                    <div class="panel-label">Прогноз на ближайшие часы</div>
+                    <div class="hourly-list">
+                        <div class="hourly-item">
+                            <span class="hour-time">Сейчас</span>
+                            <svg class="hour-icon" viewBox="0 0 24 24" fill="white"><path d="M12 7a5 5 0 100 10 5 5 0 000-10zM2 13h2a1 1 0 100-2H2a1 1 0 100 2zm18 0h2a1 1 0 100-2h-2a1 1 0 100 2zM11 2v2a1 1 0 100 2V2a1 1 0 100-2zm0 18v2a1 1 0 100 2v-2a1 1 0 100-2z"/></svg>
+                            <span class="hour-temp">-12°</span>
+                        </div>
+                        <div class="hourly-item">
+                            <span class="hour-time">13:00</span>
+                            <svg class="hour-icon" viewBox="0 0 24 24" fill="white"><path d="M17.5 19a5.5 5.5 0 004.48-8.68 5.5 5.5 0 00-10.45-1.25 4 4 0 10-5.03 5.93H17.5z"/></svg>
+                            <span class="hour-temp">-11°</span>
+                        </div>
+                        <div class="hourly-item">
+                            <span class="hour-time">14:00</span>
+                            <svg class="hour-icon" viewBox="0 0 24 24" fill="white"><path d="M17.5 19a5.5 5.5 0 004.48-8.68 5.5 5.5 0 00-10.45-1.25 4 4 0 10-5.03 5.93H17.5z"/></svg>
+                            <span class="hour-temp">-10°</span>
+                        </div>
+                        <div class="hourly-item">
+                            <span class="hour-time">15:00</span>
+                            <svg class="hour-icon" viewBox="0 0 24 24" fill="white"><path d="M12 7a5 5 0 100 10 5 5 0 000-10z"/></svg>
+                            <span class="hour-temp">-12°</span>
+                        </div>
+                        <div class="hourly-item">
+                            <span class="hour-time">16:00</span>
+                            <svg class="hour-icon" viewBox="0 0 24 24" fill="white"><path d="M17.5 19a5.5 5.5 0 004.48-8.68 5.5 5.5 0 00-10.45-1.25 4 4 0 10-5.03 5.93H17.5z"/></svg>
+                            <span class="hour-temp">-14°</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="detail-item">
-                    <div class="detail-icon-wrap">
-                        <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-                        </svg>
+                <div class="glass-panel">
+                    <div class="panel-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+                        Влажность
                     </div>
-                    <div class="detail-info">
-                        <span class="detail-label">Ощущается</span>
-                        <span class="detail-value">-18°</span>
-                    </div>
+                    <div class="panel-value">84%</div>
+                    <p class="panel-desc">Точка росы сейчас: -14°.</p>
                 </div>
 
-                <div class="detail-item">
-                    <div class="detail-icon-wrap">
-                        <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M16.2 7.8l-2 6.3-4 2-2-6.3 4-2 4 2z"/>
-                            <path d="M12 6v2"/><path d="M12 16v2"/><path d="M6 12H4"/><path d="M20 12h-2"/>
-                        </svg>
+                <div class="glass-panel">
+                    <div class="panel-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        Ощущается
                     </div>
-                    <div class="detail-info">
-                        <span class="detail-label">Давление</span>
-                        <span class="detail-value">754 мм</span>
-                    </div>
+                    <div class="panel-value">-18°</div>
+                    <p class="panel-desc">Ветер делает воздух холоднее.</p>
                 </div>
+
+                <div class="glass-panel">
+                    <div class="panel-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20M12 2v20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93"/></svg>
+                        УФ-ИНДЕКС
+                    </div>
+                    <div class="panel-value">0</div>
+                    <p class="panel-desc">Низкий в течение всего дня.</p>
+                </div>
+
+                <div class="glass-panel">
+                    <div class="panel-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+                        Видимость
+                    </div>
+                    <div class="panel-value">10 км</div>
+                    <p class="panel-desc">Ясно, хорошая видимость.</p>
+                </div>
+
             </div>
         </div>
     </div>
