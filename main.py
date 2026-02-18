@@ -79,7 +79,7 @@ async def on_ready():
 async def slash_ping(interaction: discord.Interaction):
     await interaction.response.send_message(f"`{round(bot.latency * 1000)}ms`", ephemeral=True)
 
-@bot.tree.command(name="render", description="Render widget.html")
+@bot.tree.command(name="render", description="Render widget")
 async def slash_render(interaction: discord.Interaction):
     await interaction.response.defer()
     path = os.path.abspath("widget.html")
@@ -121,7 +121,6 @@ async def weather(interaction: discord.Interaction, city: str):
             "84%": f"{data['main']['humidity']}%",
             "-18°": f"{round(data['main']['feels_like'])}°",
             "754": str(round(data['main']['pressure'] * 0.750062)),
-            "0": str(data.get('clouds', {}).get('all', 0))
         }
 
         for placeholder, value in replacements.items():
