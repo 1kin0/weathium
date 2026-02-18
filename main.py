@@ -132,8 +132,8 @@ async def weather(interaction: discord.Interaction, city: str):
         try:
             await page.set_content(html, wait_until="domcontentloaded")
             await asyncio.sleep(0.4)
-            buffer = await page.screenshot(type="webp", omit_background=True)
-            await interaction.followup.send(file=discord.File(io.BytesIO(buffer), "widget.webp"))
+            buffer = await page.screenshot(type="png", omit_background=True)
+            await interaction.followup.send(file=discord.File(io.BytesIO(buffer), "widget.png"))
         finally:
             await page.close()
             await context.close()
