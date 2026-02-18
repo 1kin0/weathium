@@ -100,8 +100,8 @@ async def slash_render(interaction: discord.Interaction):
         await send_unified_log("render_error", discord.Color.red(), traceback.format_exc(), interaction)
         await interaction.followup.send("Ошибка рендеринга.")
 
-@bot.tree.command(name="weather", description="Показать погоду в городе")
-@app_commands.describe(city="Введите название города")
+@bot.tree.command(name="weather", description="Check the weather in the city")
+@app_commands.describe(city="Enter the name of the city")
 async def weather(interaction: discord.Interaction, city: str):
     await interaction.response.defer()
     
@@ -139,6 +139,6 @@ async def weather(interaction: discord.Interaction, city: str):
             await context.close()
     except Exception:
         await send_unified_log("weather_error", discord.Color.red(), traceback.format_exc(), interaction)
-        await interaction.followup.send("Ошибка генерации погоды.")
+        await interaction.followup.send("Weather generation error.")
 
 bot.run(TOKEN)
