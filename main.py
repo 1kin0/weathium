@@ -41,11 +41,13 @@ async def send_unified_log(log_type: str, color: discord.Color, content: str, in
         else:
             location = "**LOCATION :** `Internal System`"
 
-        mention = "<@&1474514062909112566> " if "error" in log_type.lower() else ''
+        # Упоминание роли (только если в типе лога есть 'error')
+        mention = "<@&1474514062909112566>" if "error" in log_type.lower() else ""
 
-        embed = discord.Embed(title=header, description=f"{location}\n{mention}\n ```{content[:1000]}``` ", color=color)
+        embed = discord.Embed(title=header, description=f"{location}\n\n ```{content[:1000]}``` ", color=color)
         
-        await channel.send(embed=embed)
+        # Передаем mention в параметр content, чтобы прошел пуш-уведомление
+        await channel.send(content=mention, embed=embed)
     except:
         pass
 
@@ -76,6 +78,11 @@ async def on_ready():
     await bot.tree.sync()
     await send_unified_log("startup", discord.Color.green(), "Bot online")
     asyncio.create_task(get_browser())
+
+@bot.tree.command(name="ping", description="Check bots latency")
+async def ping(interaction: discord.Interaction):
+    latency = round(bot.latency * 1000)
+    await interaction.response.send_message(f"`{latency}ms`")
 
 @bot.tree.command(name="render", description="Render widget test")
 async def slash_render(interaction: discord.Interaction):
