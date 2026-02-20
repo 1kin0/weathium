@@ -82,7 +82,7 @@ async def slash_ping(interaction: discord.Interaction):
 @bot.tree.command(name="render", description="Render widget")
 async def slash_render(interaction: discord.Interaction):
     await interaction.response.defer()
-    path = os.path.abspath("widget.html")
+    path = os.path.abspath("/web/widget.html")
     
     try:
         browser = await get_browser()
@@ -111,20 +111,34 @@ async def weather(interaction: discord.Interaction, city: str):
         return
 
     try:
-        with open("widget.html", "r", encoding="utf-8") as f:
+        with open("/web/widget.html", "r", encoding="utf-8") as f:
             html = f.read()
+
+        # Подготавливаем данные из OpenWeather API
+        temp = round(data['main']['temp'])
+        feels_like = round(data['main']['feels_like'])
+        humidity = data['main']['humidity']
+        pressure_hpa = data['main']['pressure']
+        # Конвертируем гПа в мм рт. ст.
+        pressure_mm = round(pressure_hpa * 0.750062)
+        # Скорость ветра
+        wind_speed = data['wind']['speed']
+        # Описание погоды
+        description = data['weather'][0]['description'].capitalize()
 
         replacements = {
             "Москва": data['name'],
-            "Ясно": data['weather'][0]['description'].capitalize(),
-            "-12°": f"{round(data['main']['temp'])}°",
-            "84%": f"{data['main']['humidity']}%",
-            "-18°": f"{round(data['main']['feels_like'])}°",
-            "754": str(round(data['main']['pressure'] * 0.750062)),
+            "Ясно": description,
+            "-12°": f"{temp}°",
+            "-18°": f"{feels_like}°",
+            "84%": f"{humidity}%",
+            "4.2": f"{wind_speed}", # Заменяем значение ветра
+            "754": str(pressure_mm),
         }
 
         for placeholder, value in replacements.items():
             html = html.replace(placeholder, value)
+
 
         browser = await get_browser()
         context = await browser.new_context(viewport={"width": 1300, "height": 1000})
