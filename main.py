@@ -16,7 +16,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY") 
 LOG_GUILD_ID = 1473082652452978991
 LOG_CHANNEL_ID = 1473409327514648597
-WIDGET_PATH = "/web/widget.html"
+WIDGET_PATH = "/app/web/widget.html"
 
 _browser = None
 _playwright = None
@@ -36,7 +36,6 @@ async def send_unified_log(log_type: str, color: discord.Color, content: str, in
         timestamp = int(time.time())
         header = f"**TYPE : {log_type.upper()}**\n**TIME : <t:{timestamp}:F>**\n"
 
-        # Определяем, нужно ли упоминание (если в типе лога есть 'error')
         mention = "<@&1474514062909112566> " if "error" in log_type.lower() else ""
 
         if interaction:
@@ -46,7 +45,6 @@ async def send_unified_log(log_type: str, color: discord.Color, content: str, in
 
         embed = discord.Embed(title=header, description=f"{location}\n\n ```{content[:1000]}``` ", color=color)
         
-        # Передаем упоминание в параметр content, чтобы оно сработало как пинг
         await channel.send(content=mention, embed=embed)
     except:
         pass
