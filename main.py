@@ -16,6 +16,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY") 
 LOG_GUILD_ID = 1473082652452978991
 LOG_CHANNEL_ID = 1473409327514648597
+WIDGET_PATH = "/web/widget.html"
 
 _browser = None
 _playwright = None
@@ -35,13 +36,18 @@ async def send_unified_log(log_type: str, color: discord.Color, content: str, in
         timestamp = int(time.time())
         header = f"**TYPE : {log_type.upper()}**\n**TIME : <t:{timestamp}:F>**\n"
 
+        # Определяем, нужно ли упоминание (если в типе лога есть 'error')
+        mention = "<@&1474514062909112566> " if "error" in log_type.lower() else ""
+
         if interaction:
             location = f"**LOCATION :** `{interaction.guild.name if interaction.guild else 'DM'}`\n**USER :** `{interaction.user}`"
         else:
             location = "**LOCATION :** `Internal System`"
 
         embed = discord.Embed(title=header, description=f"{location}\n\n ```{content[:1000]}``` ", color=color)
-        await channel.send(embed=embed)
+        
+        # Передаем упоминание в параметр content, чтобы оно сработало как пинг
+        await channel.send(content=mention, embed=embed)
     except:
         pass
 
@@ -65,9 +71,7 @@ async def fetch_weather(city: str):
         async with session.get(url) as resp:
             if resp.status == 200:
                 return await resp.json()
-            else:
-                await send_unified_log("api_warning", discord.Color.orange(), f"Error {resp.status}: {city}")
-                return None
+            return None
 
 @bot.event
 async def on_ready():
@@ -75,21 +79,20 @@ async def on_ready():
     await send_unified_log("startup", discord.Color.green(), "Bot online")
     asyncio.create_task(get_browser())
 
-@bot.tree.command(name="ping", description="Check latency")
-async def slash_ping(interaction: discord.Interaction):
-    await interaction.response.send_message(f"`{round(bot.latency * 1000)}ms`", ephemeral=True)
-
-@bot.tree.command(name="render", description="Render widget")
+@bot.tree.command(name="render", description="Render widget test")
 async def slash_render(interaction: discord.Interaction):
     await interaction.response.defer()
-    path = os.path.abspath("/web/widget.html")
-    
     try:
+        # Исправление ошибки ERR_FILE: читаем файл через Python
+        with open(WIDGET_PATH, "r", encoding="utf-8") as f:
+            html = f.read()
+            
         browser = await get_browser()
         context = await browser.new_context(viewport={"width": 1300, "height": 1000})
         page = await context.new_page()
         try:
-            await page.goto(f'file://{path}', wait_until="domcontentloaded")
+            # Используем set_content вместо goto(file://)
+            await page.set_content(html, wait_until="domcontentloaded")
             await asyncio.sleep(0.3)
             buffer = await page.screenshot(type="png", omit_background=True)
             await interaction.followup.send(file=discord.File(io.BytesIO(buffer), "render.png"))
@@ -104,41 +107,54 @@ async def slash_render(interaction: discord.Interaction):
 @app_commands.describe(city="Enter the name of the city")
 async def weather(interaction: discord.Interaction, city: str):
     await interaction.response.defer()
-    
     data = await fetch_weather(city)
     if not data:
         await interaction.followup.send(f"Город `{city}` не найден.")
         return
 
     try:
-        with open("/web/widget.html", "r", encoding="utf-8") as f:
+        with open(WIDGET_PATH, "r", encoding="utf-8") as f:
             html = f.read()
 
-        # Подготавливаем данные из OpenWeather API
+        # --- Логика стилизации в зависимости от погоды ---
+        condition_main = data['weather'][0]['main']
+        
+        # Mapping: (Эмодзи, HEX-цвет, RGB-цвет для градиента)
+        # В HTML Blurple это #5865F2 и rgba(88, 101, 242, ...)
+        weather_styles = {
+            "Clear": ("☀️", "#00A8FC", "0, 168, 252"),       # Свежий голубой
+            "Clouds": ("☁️", "#72767D", "114, 118, 125"),    # Серый (Discord)
+            "Rain": ("🌧️", "#5865F2", "88, 101, 242"),        # Blurple
+            "Drizzle": ("🌦️", "#5865F2", "88, 101, 242"),
+            "Thunderstorm": ("⛈️", "#FEE75C", "254, 231, 92"), # Желтый
+            "Snow": ("❄️", "#FFFFFF", "255, 255, 255"),       # Белый
+            "Mist": ("🌫️", "#B9BBBE", "185, 187, 190"),       # Туман
+            "Fog": ("🌫️", "#B9BBBE", "185, 187, 190"),
+        }
+        
+        icon, accent_hex, accent_rgb = weather_styles.get(condition_main, ("☀️", "#5865F2", "88, 101, 242"))
+
+        # Подготовка данных
         temp = round(data['main']['temp'])
         feels_like = round(data['main']['feels_like'])
-        humidity = data['main']['humidity']
-        pressure_hpa = data['main']['pressure']
-        # Конвертируем гПа в мм рт. ст.
-        pressure_mm = round(pressure_hpa * 0.750062)
-        # Скорость ветра
-        wind_speed = data['wind']['speed']
-        # Описание погоды
         description = data['weather'][0]['description'].capitalize()
+        pressure_mm = round(data['main']['pressure'] * 0.750062)
 
         replacements = {
             "Москва": data['name'],
             "Ясно": description,
             "-12°": f"{temp}°",
             "-18°": f"{feels_like}°",
-            "84%": f"{humidity}%",
-            "4.2": f"{wind_speed}", # Заменяем значение ветра
+            "84%": f"{data['main']['humidity']}%",
+            "4.2": str(data['wind']['speed']),
             "754": str(pressure_mm),
+            "☀️": icon, # Замена иконки
+            "#5865F2": accent_hex, # Замена цвета иконок и границ
+            "88, 101, 242": accent_rgb # Замена цвета градиента фона
         }
 
         for placeholder, value in replacements.items():
             html = html.replace(placeholder, value)
-
 
         browser = await get_browser()
         context = await browser.new_context(viewport={"width": 1300, "height": 1000})
