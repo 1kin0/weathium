@@ -13,4 +13,4 @@ Discord bot that generates styled weather widgets using OpenWeatherMap API and b
 
 Bot fetches weather data via OpenWeatherMap API, replaces placeholders in HTML template with city temperature, feels-like temp, humidity, wind speed, pressure, and condition-based styling (colors, icons, gradients). Playwright renders HTML to PNG screenshot and sends as Discord attachment.
 
-<link>https://discord.com/oauth2/authorize?client_id=1473090401551253565&permissions=100352&integration_type=0&scope=bot<link/>
+[ADD BOT](https://discord.com/oauth2/authorize?client_id=1473090401551253565&permissions=100352&integration_type=0&scope=bot) ←
