@@ -36,16 +36,16 @@ async def send_unified_log(log_type: str, color: discord.Color, content: str, in
         timestamp = int(time.time())
         header = f"**TYPE : {log_type.upper()}**\n**TIME : <t:{timestamp}:F>**\n"
 
-        mention = "<@&1474514062909112566> " if "error" in log_type.lower() else ""
-
         if interaction:
             location = f"**LOCATION :** `{interaction.guild.name if interaction.guild else 'DM'}`\n**USER :** `{interaction.user}`"
         else:
             location = "**LOCATION :** `Internal System`"
 
-        embed = discord.Embed(title=header, description=f"{location}\n\n ```{content[:1000]}``` ", color=color)
+        mention = "<@&1474514062909112566> " if "error" in log_type.lower() else ''
+
+        embed = discord.Embed(title=header, description=f"{location}\n{mention}\n ```{content[:1000]}``` ", color=color)
         
-        await channel.send(content=mention, embed=embed)
+        await channel.send(embed=embed)
     except:
         pass
 
