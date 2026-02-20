@@ -1,4 +1,4 @@
-# Weather Bot
+# Weathium Bot
 
 Discord bot that generates styled weather widgets using OpenWeatherMap API and browser rendering.
 
